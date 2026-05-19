@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VPBank MSO — Tín Chấp vs Thế Chấp</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --green:#00a651; --green-d:#007a3c; --green-l:#e6f7ee;
+  --red:#e8344a;   --red-l:#fdeef0;
+  --blue:#003087;  --blue-l:#e8edf7;
+  --orange:#f5a623;--orange-l:#fef6e8;
+  --gray:#6b7280;  --gray-l:#f3f4f6;
+  --border:#e5e7eb;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#003087,#00a651);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,48,135,.3)}
+.hdr-logo{width:42px;height:42px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:var(--green-d);flex-shrink:0;line-height:1.3;text-align:center}
+.hdr-txt h1{color:#fff;font-size:15px;font-weight:800;line-height:1.2}
+.hdr-txt p{color:rgba(255,255,255,.78);font-size:11px;margin-top:2px}
+.hdr-badge{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.3);white-space:nowrap}
+
+/* LAYOUT */
+.wrap{max-width:1200px;margin:0 auto;padding:14px}
+
+/* CARD */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.card-hd{padding:12px 16px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.card-hd .ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.card-bd{padding:14px 16px}
+
+/* INPUT GRID */
+.inp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:580px){.inp-grid{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px}
+.fld-inner{position:relative}
+.fld input{width:100%;padding:9px 42px 9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-weight:700;outline:none;transition:border-color .15s,box-shadow .15s;background:#fff;color:#1a202c}
+.fld input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,166,81,.12)}
+.fld .unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--gray);font-weight:700;pointer-events:none}
+.fld-hint{font-size:11px;color:var(--gray)}
+
+/* KYHAN TABS */
+.kh-grp{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.kh-lbl{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px}
+.kh-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.kh-tab{padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--gray);cursor:pointer;transition:all .15s}
+.kh-tab:hover{border-color:var(--green);color:var(--green)}
+.kh-tab.on{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(0,166,81,.3)}
+
+/* SUMMARY ROW */
+.sum-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:680px){.sum-row{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.sum-row{grid-template-columns:1fr}}
+.sc{background:#fff;border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid transparent}
+.sc.tc{border-color:var(--green)}.sc.th{border-color:var(--red)}.sc.df{border-color:var(--orange)}
+.sc .slbl{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.sc .sval{font-size:20px;font-weight:900;line-height:1.1}
+.sc.tc .sval{color:var(--green-d)}.sc.th .sval{color:var(--red)}.sc.df .sval{color:var(--orange)}
+.sc .ssub{font-size:11px;color:var(--gray);margin-top:4px}
+
+/* INSIGHT */
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:580px){.ins-grid{grid-template-columns:1fr}}
+.ins{border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.65}
+.ins.g{background:var(--green-l);border-left:3px solid var(--green)}
+.ins.r{background:var(--red-l);border-left:3px solid var(--red)}
+.ins.o{background:var(--orange-l);border-left:3px solid var(--orange)}
+.ins.b{background:var(--blue-l);border-left:3px solid var(--blue)}
+.ins strong{display:block;margin-bottom:4px;font-size:12px}
+.ins.g strong{color:var(--green-d)}.ins.r strong{color:var(--red)}
+.ins.o strong{color:#b87000}.ins.b strong{color:var(--blue)}
+
+/* CHART */
+.chart-wrap{position:relative;height:280px}
+@media(max-width:580px){.chart-wrap{height:210px}}
+
+/* TABLE */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.hint-scroll{font-size:11px;color:var(--gray);padding:8px 16px 0;display:none}
+@media(max-width:700px){.hint-scroll{display:block}}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:820px}
+thead tr:first-child th{background:var(--blue);color:#fff;padding:9px 7px;font-size:11px;font-weight:800;text-align:center;white-space:nowrap}
+thead tr:nth-child(2) th{background:var(--blue-l);color:var(--blue);padding:7px;font-size:10.5px;font-weight:700;text-align:center;border-bottom:2px solid var(--blue);white-space:nowrap}
+.htc{background:var(--green-l)!important;color:var(--green-d)!important}
+.hth{background:var(--red-l)!important;color:var(--red)!important}
+.hcm{background:var(--orange-l)!important;color:#b87000!important}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#f9fafb}
+tbody tr.ybnd{border-top:2.5px solid var(--orange)}
+tbody td{padding:6px 7px;text-align:right;white-space:nowrap}
+tbody td:first-child{text-align:center;font-weight:800;color:var(--blue)}
+td.tc{color:var(--green-d)}
+td.th{color:#c0392b}
+td.rY1{background:var(--green-l);color:var(--green-d);font-weight:800}
+td.rY2{background:var(--red-l);color:var(--red);font-weight:800}
+td.pos{color:var(--green-d);font-weight:800}
+td.neg{color:var(--red);font-weight:800}
+td.bold{font-weight:800}
+tfoot tr{background:#1a202c}
+tfoot td{padding:8px 7px;text-align:right;color:#fff;font-weight:800;font-size:12px;white-space:nowrap}
+tfoot td:first-child{text-align:center;color:#9ca3af;font-size:11px}
+
+/* FOOTER */
+.foot{text-align:center;color:var(--gray);font-size:11px;padding:10px;margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">VP<br>Bank</div>
+  <div class="hdr-txt">
+    <h1>So Sánh Tín Chấp & Thế Chấp</h1>
+    <p>MSO Insight — Phân Tích Dòng Tiền Niên Kim vs Giảm Dần</p>
+  </div>
+  <div class="hdr-badge">MSO Tool</div>
+</div>
+
+<div class="wrap">
+
+  <!-- INPUT -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="ico" style="background:var(--green-l)">🎛️</div>
+      THÔNG SỐ ĐẦU VÀO — Tùy Chỉnh
+    </div>
+    <div class="card-bd">
+      <div class="inp-grid">
+
+        <div class="fld">
+          <label>Số Tiền Vay</label>
+          <div class="fld-inner">
+            <input type="text" id="stv" value="1.000.000.000" inputmode="numeric" oninput="fmtAndCalc(this)">
+            <span class="unit">VNĐ</span>
+          </div>
+          <span class="fld-hint" id="stv-hint">= 1 tỷ đồng</span>
+        </div>
+
+        <div class="fld">
+          <label>TÍN CHẤP — Lãi suất cố định (%/năm)</label>
+          <div class="fld-inner">
+            <input type="number" id="lTC" value="19" min="1" max="60" step="0.1" oninput="calc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="fld-hint">Lãi suất Niên Kim — cố định suốt kỳ vay</span>
+        </div>
+
+        <div class="fld">
+          <label>THẾ CHẤP — Ưu đãi Năm 1 (%/năm)</label>
+          <div class="fld-inner">
+            <input type="number" id="lTH1" value="7.5" min="1" max="30" step="0.1" oninput="calc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="fld-hint">Lãi suất ưu đãi 12 tháng đầu tiên</span>
+        </div>
+
+        <div class="fld">
+          <label>THẾ CHẤP — Thả nổi từ Năm 2 (%/năm)</label>
+          <div class="fld-inner">
+            <input type="number" id="lTH2" value="11.5" min="1" max="30" step="0.1" oninput="calc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="fld-hint">Lãi suất biên độ thả nổi từ tháng 13 trở đi</span>
+        </div>
+
+        <div class="kh-grp">
+          <div class="kh-lbl">Kỳ Hạn Vay</div>
+          <div class="kh-tabs" id="khtabs">
+            <button class="kh-tab" onclick="setKH(12)">12 tháng</button>
+            <button class="kh-tab" onclick="setKH(24)">24 tháng</button>
+            <button class="kh-tab on" onclick="setKH(36)">36 tháng</button>
+            <button class="kh-tab" onclick="setKH(48)">48 tháng</button>
+            <button class="kh-tab" onclick="setKH(60)">60 tháng</button>
+            <button class="kh-tab" onclick="setKH(72)">72 tháng</button>
+            <button class="kh-tab" onclick="setKH(84)">84 tháng</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="sum-row">
+    <div class="sc tc">
+      <div class="slbl">📌 Tín Chấp — Mỗi Tháng</div>
+      <div class="sval" id="s-tc-m">—</div>
+      <div class="ssub" id="s-tc-ttl">Tổng trả: —</div>
+    </div>
+    <div class="sc th">
+      <div class="slbl">🏠 Thế Chấp — Tháng 1</div>
+      <div class="sval" id="s-th-m1">—</div>
+      <div class="ssub" id="s-th-ttl">—</div>
+    </div>
+    <div class="sc df">
+      <div class="slbl">⚖️ Chênh Lệch Tổng Chi Phí</div>
+      <div class="sval" id="s-diff">—</div>
+      <div class="ssub" id="s-diff-sub">—</div>
+    </div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="ico" style="background:var(--blue-l)">💡</div>
+      MSO INSIGHT — Lập Luận Chốt Khách Hàng
+    </div>
+    <div class="card-bd">
+      <div class="ins-grid">
+        <div class="ins g">
+          <strong>📌 TÍN CHẤP (Niên Kim)</strong>
+          Khách hàng đóng đúng <b id="i-tc-m" style="color:var(--green-d)">—</b> mỗi tháng — cố định từ đầu đến cuối. Cực kỳ chủ động tài chính, không lo rủi ro lãi suất tăng.
+        </div>
+        <div class="ins r">
+          <strong>📌 THẾ CHẤP — "Cú Sốc" Tháng 13</strong>
+          Tháng 1 trả <b id="i-th-m1" style="color:var(--red)">—</b>, nhưng từ tháng 13 lãi thả nổi <b id="i-lth2" style="color:var(--red)">—</b>%/năm → tổng trả vọt lên <b id="i-th-m13" style="color:var(--red)">—</b>, tạo <em>"cú sốc" dòng tiền.</em>
+        </div>
+        <div class="ins o">
+          <strong>📌 Chi Phí Cơ Hội Của Thế Chấp</strong>
+          Mất chi phí định giá, công chứng, bảo hiểm cháy nổ, và <em>mất quyền linh hoạt</em> mua bán / chuyển nhượng tài sản bảo đảm trong suốt thời gian vay.
+        </div>
+        <div class="ins b">
+          <strong>📌 Kết Luận MSO</strong>
+          Nếu khách hàng cần dòng tiền nhanh (1–2 ngày), chủ động được số tiền trả hàng tháng và muốn <em>giữ sổ hồng tự do quay vòng vốn</em> → <b style="color:var(--green-d)">Tín Chấp là giải pháp vẹn toàn.</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="ico" style="background:var(--green-l)">📊</div>
+      Biểu Đồ So Sánh Dòng Tiền Hàng Tháng
+    </div>
+    <div class="card-bd">
+      <div class="chart-wrap"><canvas id="ch"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="ico" style="background:var(--blue-l)">📋</div>
+      Bảng Tiến Trình Dòng Tiền Chi Tiết
+    </div>
+    <div class="hint-scroll">👈 Vuốt ngang để xem đầy đủ</div>
+    <div style="padding:0">
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Kỳ</th>
+              <th colspan="4" class="htc">TÍN CHẤP — Niên Kim Cố Định (<span id="hdr-lTC">19</span>%/năm)</th>
+              <th colspan="5" class="hth">THẾ CHẤP — Gốc Chia Đều + Lãi Thả Nổi</th>
+              <th colspan="2" class="hcm">SO SÁNH</th>
+            </tr>
+            <tr>
+              <th class="htc">Dư nợ đầu kỳ</th>
+              <th class="htc">Gốc trả</th>
+              <th class="htc">Lãi trả</th>
+              <th class="htc" style="font-weight:900">✅ Tổng trả/tháng</th>
+              <th class="hth">Lãi suất</th>
+              <th class="hth">Dư nợ đầu kỳ</th>
+              <th class="hth">Gốc trả</th>
+              <th class="hth">Lãi trả</th>
+              <th class="hth" style="font-weight:900">Tổng trả/tháng</th>
+              <th class="hcm">Lệch TC−TH</th>
+              <th class="hcm">Lệch lũy kế</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot id="tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">🏦 VPBank MSO Tool · Dữ liệu mang tính tham khảo · Lãi suất thực tế theo từng sản phẩm cụ thể</div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let KH = 36;
+let CH = null;
+
+// ── FORMAT UTILS ──────────────────────────────────────
+const fmtVN = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
+function fmtShort(n){
+  const a=Math.abs(n);
+  if(a>=1e9) return (n/1e9).toFixed(2).replace('.',',')+'B';
+  if(a>=1e6) return (n/1e6).toFixed(1).replace('.',',')+'tr';
+  return fmtVN(n);
+}
+function parseVN(s){ return parseFloat(String(s).replace(/\./g,'').replace(',','.')) || 0; }
+function fmtInput(el){
+  const raw = el.value.replace(/\D/g,'');
+  if(!raw) return;
+  el.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw,10));
+}
+function fmtAndCalc(el){
+  fmtInput(el);
+  const v = parseVN(el.value);
+  const h = document.getElementById('stv-hint');
+  if(v>=1e9) h.textContent='= '+(v/1e9).toFixed(2).replace('.',',')+'  tỷ đồng';
+  else if(v>=1e6) h.textContent='= '+(v/1e6).toFixed(1).replace('.',',')+'  triệu đồng';
+  else h.textContent='';
+  calc();
+}
+
+// ── KỲ HẠN ────────────────────────────────────────────
+function setKH(n){
+  KH=n;
+  document.querySelectorAll('.kh-tab').forEach(b=>b.classList.toggle('on', b.textContent.trim()===n+' tháng'));
+  calc();
+}
+
+// ── CORE CALC ─────────────────────────────────────────
+function buildRows(P, rTC_yr, rTH1_yr, rTH2_yr, n){
+  const r = rTC_yr/12;
+  const pmt = P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const gopTH = P/n;
+  const rows=[];
+  let bTC=P, bTH=P, cum=0;
+
+  for(let i=1;i<=n;i++){
+    const lTC  = bTC*r;
+    const gTC  = pmt - lTC;
+    const totTC= pmt;
+
+    const rateYr = i<=12 ? rTH1_yr : rTH2_yr;
+    const lTH    = bTH*(rateYr/12);
+    const totTH  = gopTH + lTH;
+
+    const diff = totTC - totTH;
+    cum += diff;
+
+    rows.push({i, bTC, gTC, lTC, totTC, rateYr, bTH, gopTH, lTH, totTH, diff, cum});
+    bTC -= gTC;
+    bTH -= gopTH;
+  }
+  return {rows, pmt, gopTH};
+}
+
+// ── RENDER TABLE ──────────────────────────────────────
+function renderTable(rows, rTH1_yr, rTH2_yr){
+  let html='';
+  let sTotTC=0,sLaiTC=0,sGocTC=0,sTotTH=0,sLaiTH=0,sGocTH=0;
+
+  rows.forEach(r=>{
+    const ybnd = r.i===13 ? ' class="ybnd"' : '';
+    const rCls = r.rateYr===rTH1_yr ? 'rY1' : 'rY2';
+    // diff = TC - TH: positive = TC pays more = highlight neutral (TC more expensive but predictable)
+    const dCls = r.diff>0?'neg':'pos';
+    const cCls = r.cum>0?'neg':'pos';
+
+    html+=`<tr${ybnd}>
+<td>${r.i}</td>
+<td class="tc">${fmtVN(r.bTC)}</td>
+<td class="tc">${fmtVN(r.gTC)}</td>
+<td class="tc">${fmtVN(r.lTC)}</td>
+<td class="tc bold">${fmtVN(r.totTC)}</td>
+<td class="${rCls}">${(r.rateYr*100).toFixed(2)}%</td>
+<td class="th">${fmtVN(r.bTH)}</td>
+<td class="th">${fmtVN(r.gopTH)}</td>
+<td class="th">${fmtVN(r.lTH)}</td>
+<td class="th bold">${fmtVN(r.totTH)}</td>
+<td class="${dCls}">${r.diff>=0?'+':''}${fmtVN(r.diff)}</td>
+<td class="${cCls}">${r.cum>=0?'+':''}${fmtVN(r.cum)}</td>
+</tr>`;
+    sTotTC+=r.totTC; sLaiTC+=r.lTC; sGocTC+=r.gTC;
+    sTotTH+=r.totTH; sLaiTH+=r.lTH; sGocTH+=r.gopTH;
+  });
+
+  const tDiff=sTotTC-sTotTH;
+  const tCls = tDiff>0?'color:#f59e0b':'color:#6ee7b7';
+
+  document.getElementById('tbody').innerHTML=html;
+  document.getElementById('tfoot').innerHTML=`<tr>
+<td>TỔNG</td>
+<td>—</td>
+<td style="color:#6ee7b7">${fmtVN(sGocTC)}</td>
+<td style="color:#f59e0b">${fmtVN(sLaiTC)}</td>
+<td style="font-size:13px">${fmtVN(sTotTC)}</td>
+<td>—</td>
+<td>—</td>
+<td style="color:#6ee7b7">${fmtVN(sGocTH)}</td>
+<td style="color:#f59e0b">${fmtVN(sLaiTH)}</td>
+<td style="font-size:13px">${fmtVN(sTotTH)}</td>
+<td style="${tCls};font-size:13px">${tDiff>=0?'+':''}${fmtVN(tDiff)}</td>
+<td style="${tCls};font-size:13px">${tDiff>=0?'+':''}${fmtVN(tDiff)}</td>
+</tr>`;
+}
+
+// ── RENDER CHART ──────────────────────────────────────
+function renderChart(rows){
+  const ctx=document.getElementById('ch').getContext('2d');
+  if(CH) CH.destroy();
+  const n=rows.length;
+  const step = n<=24?3:n<=60?6:12;
+  CH=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:rows.map(r=>'T'+r.i),
+      datasets:[
+        {label:'Tín Chấp (Niên Kim – cố định)',
+         data:rows.map(r=>Math.round(r.totTC)),
+         borderColor:'#00a651',backgroundColor:'rgba(0,166,81,.1)',
+         borderWidth:2.5,pointRadius:n<=24?4:2,pointHoverRadius:6,tension:.3,fill:true},
+        {label:'Thế Chấp (Dư nợ giảm dần)',
+         data:rows.map(r=>Math.round(r.totTH)),
+         borderColor:'#e8344a',backgroundColor:'rgba(232,52,74,.06)',
+         borderWidth:2.5,pointRadius:n<=24?4:2,pointHoverRadius:6,tension:.3,fill:true,borderDash:[6,3]}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:12},boxWidth:14,padding:14}},
+        tooltip:{callbacks:{
+          label:c=>' '+c.dataset.label+': '+new Intl.NumberFormat('vi-VN').format(c.parsed.y)+' đ'
+        }}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0,
+           callback:(v,i)=>(i===0||(i+1)%step===0)?'T'+(i+1):''}},
+        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},
+           callback:v=>{
+             if(Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B';
+             if(Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'tr';
+             return v;
+           }}}
+      }
+    }
+  });
+}
+
+// ── SUMMARY ───────────────────────────────────────────
+function updateSummary(rows, pmt, rTH2_yr){
+  const totTC = rows.reduce((s,r)=>s+r.totTC,0);
+  const totTH = rows.reduce((s,r)=>s+r.totTH,0);
+  const m1TH  = rows[0].totTH;
+  const m13TH = rows.length>=13 ? rows[12].totTH : null;
+  const diff  = totTC-totTH;
+  const diffA = Math.abs(diff);
+
+  document.getElementById('s-tc-m').textContent    = fmtVN(pmt)+' đ';
+  document.getElementById('s-tc-ttl').textContent  = 'Tổng trả: '+fmtShort(totTC)+' đ';
+  document.getElementById('s-th-m1').textContent   = fmtVN(m1TH)+' đ';
+  document.getElementById('s-th-ttl').textContent  = 'Tổng: '+fmtShort(totTH)+' đ'+(m13TH?' | T.13: '+fmtVN(m13TH)+' đ':'');
+  document.getElementById('s-diff').textContent    = (diff>=0?'+':'')+fmtShort(diff)+' đ';
+  document.getElementById('s-diff-sub').textContent= diff>0
+    ? 'TC trả thêm '+fmtShort(diffA)+' so với TH'
+    : 'TC tiết kiệm '+fmtShort(diffA)+' so với TH';
+
+  document.getElementById('i-tc-m').textContent  = fmtVN(pmt)+' đ';
+  document.getElementById('i-th-m1').textContent = fmtVN(m1TH)+' đ';
+  document.getElementById('i-lth2').textContent  = (rTH2_yr*100).toFixed(1);
+  document.getElementById('i-th-m13').textContent= m13TH ? fmtVN(m13TH)+' đ' : 'N/A';
+}
+
+// ── MAIN CALC ─────────────────────────────────────────
+function calc(){
+  const P    = parseVN(document.getElementById('stv').value);
+  const rTC  = (parseFloat(document.getElementById('lTC').value)||19)/100;
+  const rTH1 = (parseFloat(document.getElementById('lTH1').value)||7.5)/100;
+  const rTH2 = (parseFloat(document.getElementById('lTH2').value)||11.5)/100;
+  if(P<=0||isNaN(P)) return;
+
+  document.getElementById('hdr-lTC').textContent = (rTC*100).toFixed(1);
+
+  const {rows,pmt} = buildRows(P, rTC, rTH1, rTH2, KH);
+  renderTable(rows, rTH1, rTH2);
+  renderChart(rows);
+  updateSummary(rows, pmt, rTH2);
+}
+
+// ── INIT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', calc);
+</script>
+</body>
+</html>
