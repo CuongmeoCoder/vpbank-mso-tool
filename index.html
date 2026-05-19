@@ -488,7 +488,7 @@ function setKH(n){
 // ── CORE CALC ─────────────────────────────────────────
 function buildRows(P, rTC_yr, rTH1_yr, rTH2_yr, n){
   const r = rTC_yr/12;
-  const pmt = P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const pmt = r === 0 ? P/n : P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
   const gopTH = P/n;
   const rows=[];
   let bTC=P, bTH=P, cum=0;
@@ -509,26 +509,28 @@ function buildRows(P, rTC_yr, rTH1_yr, rTH2_yr, n){
     bTC -= gTC;
     bTH -= gopTH;
   }
-  applyDisplayRounding(rows, P);
-  return {rows, pmt, gopTH};
+  applyDisplayRounding(rows, P, r);
+  return {rows, pmt: Math.round(pmt), gopTH};
 }
 
-function applyDisplayRounding(rows, P){
-  let paidGTC=0, paidGTH=0, cum=0;
+function applyDisplayRounding(rows, P, rTC_mo){
+  let paidGTH=0, cum=0;
+  let bTC = Math.round(P);
 
   rows.forEach((r, idx)=>{
     const last = idx === rows.length-1;
     const totTC = Math.round(r.totTC);
     const totTH = Math.round(r.totTH);
-    const gTC = last ? Math.round(P - paidGTC) : Math.round(r.gTC);
+    const lTC = Math.round(bTC * rTC_mo);
+    const gTC = totTC - lTC;
+    const nextBTC = last ? 0 : bTC - gTC;
     const gopTH = last ? Math.round(P - paidGTH) : Math.round(r.gopTH);
-    const lTC = totTC - gTC;
     const lTH = totTH - gopTH;
     const diff = totTC - totTH;
     cum += diff;
 
     r.d = {
-      bTC: Math.round(r.bTC),
+      bTC,
       gTC,
       lTC,
       totTC,
@@ -540,8 +542,8 @@ function applyDisplayRounding(rows, P){
       cum
     };
 
-    paidGTC += gTC;
     paidGTH += gopTH;
+    bTC = nextBTC;
   });
 }
 
