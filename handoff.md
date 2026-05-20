@@ -179,6 +179,7 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 - Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, có thể bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
 - Bảng so sánh kỳ hạn (v1.6) dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
+- **Phí phụ TH trong bảng so sánh**: phí thẩm định, công chứng, phí khác là one-time (giữ nguyên mọi kỳ hạn); **phí bảo hiểm cháy nổ** nhân theo `Math.ceil(n/12)` riêng cho từng cột kỳ hạn n — đảm bảo kỳ hạn dài hơn phản ánh đúng tổng bảo hiểm thực tế. Tổng TH thực của main summary (card Kết Quả) vẫn giữ `feeBaoHiem × 1 năm` như hiện tại.
 - Chưa có test tự động đóng gói; hiện kiểm tra bằng script độc lập + browser/manual QA.
 
 ---

@@ -1924,7 +1924,7 @@
 
     // ── v1.6 — SO SÁNH KỲ HẠN ────────────────────────────
     const KH_ALL = [12, 24, 36, 48, 60, 72, 84];
-    function renderComparison(P, rTC, rTH_tiers, totalFeesTH) {
+    function renderComparison(P, rTC, rTH_tiers, feeThamDinh, feeCongChung, feeBaoHiemNam, feeKhac) {
       const el = document.getElementById('comp-body');
       if (!el || P <= 0) return;
       const data = KH_ALL.map(n => {
@@ -1932,7 +1932,8 @@
         const thM1  = rs[0].d.totTH;
         const thM13 = n >= 13 ? rs[12].d.totTH : null;
         const totTC = rs.reduce((s, r) => s + r.d.totTC, 0);
-        const totTH_real = rs.reduce((s, r) => s + r.d.totTH, 0) + totalFeesTH;
+        const feesForTerm = feeThamDinh + feeCongChung + feeBaoHiemNam * Math.ceil(n / 12) + feeKhac;
+        const totTH_real = rs.reduce((s, r) => s + r.d.totTH, 0) + feesForTerm;
         const diff  = totTC - totTH_real;
         return { n, tcMonthly: pmt, thM1, thM13, totTC, totTH_real, diff };
       });
@@ -1995,7 +1996,7 @@
       updateSummary(rows, pmt, rTH3, income, totalFeesTH);
       if (window.shareData) window.shareData.prepay = null;
       updatePrepay(rows, totalFeesTH);
-      renderComparison(P, rTC, rTH_tiers, totalFeesTH);
+      renderComparison(P, rTC, rTH_tiers, feeThamDinh, feeCongChung, feeBaoHiem, feeKhac);
     }
 
     function toggleFees() {
