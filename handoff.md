@@ -1,5 +1,5 @@
 # 📋 HANDOFF — VPBank MSO Tool: Tín Chấp vs Thế Chấp
-> **Phiên bản:** v1.2 · **Ngày cập nhật:** 18/05/2026 · **Tác giả:** MSO NienKim × Claude AI
+> **Phiên bản:** v1.6 · **Ngày cập nhật:** 20/05/2026 · **Tác giả:** MSO NienKim × Claude AI
 
 ---
 
@@ -21,7 +21,7 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 
 | File | Mô tả |
 |------|-------|
-| `VPBank_TinChap_TheChap_Calculator.html` | Web App chính (v1.2) — mở bằng Chrome/Edge/Safari/mobile browser |
+| `VPBank_TinChap_TheChap_Calculator.html` | Web App chính (v1.6) — mở bằng Chrome/Edge/Safari/mobile browser |
 | `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — giữ lại để rollback nếu cần |
 | `Bang_Tinh_TC_NienKim_Vs_TH_GiamDan_ThaNoi.xlsx` | File Excel gốc (nguồn tham khảo cấu trúc) |
 | `handoff.md` | Tài liệu này |
@@ -91,6 +91,10 @@ Lệch tháng i   = Tổng trả TC(i) − Tổng trả TH(i)
 Lệch lũy kế   = Σ Lệch từ tháng 1 đến tháng i
 ```
 
+### Trả nợ trước hạn *(v1.4c)*
+Tất toán ngay sau khi đã đóng kỳ M:
+`Tổng chi phí tất toán = (Tổng đã trả từ T1 đến TM) + Dư nợ còn lại sau kỳ M + (Dư nợ còn lại × Phí phạt %)`
+
 ### Làm tròn hiển thị *(Cách C — áp dụng từ v1.1.1)*
 ```
 Mỗi dòng dùng bộ số đã làm tròn riêng:
@@ -132,10 +136,12 @@ VPBank_TinChap_TheChap_Calculator.html  (~231 KB sau khi nhúng Chart.js inline)
     ├── renderChart()    Render Chart.js
     ├── updateSummary()  Cập nhật summary + insight
     ├── updateSalesView() Cập nhật kết luận nhanh + tỷ lệ trả nợ / thu nhập (v1.2)
-    ├── updateNames()    Cập nhật tên KH/MSO trên header (v1.1)
-    ├── copySummary()    Build text + ghi clipboard (v1.1)
-    ├── exportPDF()      window.print() (v1.1)
-    └── calc()           Orchestrator
+    ├── updateNames()       Cập nhật tên KH/MSO trên header (v1.1)
+    ├── updatePrepay()      Mô phỏng tất toán trước hạn — dư nợ + phí phạt (v1.4c)
+    ├── renderComparison()  So sánh 7 kỳ hạn song song (v1.6)
+    ├── copySummary()       Build text + ghi clipboard (v1.1)
+    ├── exportPDF()         window.print() (v1.1)
+    └── calc()              Orchestrator
 ```
 
 **Thư viện ngoài:** Không còn (v1.1 nhúng Chart.js inline → 100% offline)
@@ -144,15 +150,15 @@ VPBank_TinChap_TheChap_Calculator.html  (~231 KB sau khi nhúng Chart.js inline)
 
 ## 6. Kiểm tra số liệu mẫu
 
-Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, kỳ hạn 36 tháng:**
+Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ hạn 36 tháng:**
 
 | Kỳ | TC trả/tháng | TH trả/tháng | Ghi chú |
 |----|-------------|-------------|---------|
 | T1 | 36.656.020 | 34.027.778 | TH rẻ hơn 2.6tr |
 | T12 | 36.656.020 | 32.118.056 | TH rẻ hơn 4.5tr |
 | **T13** | **36.656.020** | **34.166.667** | **⚠️ "Cú sốc" +2.0tr so T12** |
-| T36 | 36.656.020 | 28.043.981 | TH rẻ hơn 8.6tr |
-| **TỔNG (footer v1.1.1)** | **1.319.616.720** | **1.143.402.779** | TC trả thêm ~176.2tr |
+| T36 | 36.656.020 | 28.067.130 | TH rẻ hơn 8.6tr |
+| **TỔNG (footer v1.5)** | **1.319.616.720** | **1.145.208.334** | TC trả thêm ~174.4tr |
 
 > **Verify (Python độc lập):** công thức Niên Kim TC và Dư nợ giảm dần TH KHỚP chuẩn ngân hàng.
 
@@ -169,13 +175,10 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, kỳ hạn 36 tháng:
 
 ---
 
-## 8. Giới hạn hiện tại (v1.2)
+## 8. Giới hạn hiện tại (v1.6)
 
-- Thế chấp hiện tính 1 giai đoạn thả nổi (từ tháng 13); chưa hỗ trợ nhiều giai đoạn lãi suất (Y1 → Y2 → Y3+)
-- Chưa có **phí phụ thế chấp** (thẩm định, công chứng, bảo hiểm cháy nổ) để so sánh chi phí thực
-- Chưa có **trả nợ trước hạn** (phí phạt + lãi tiết kiệm)
-- Chưa có **lịch sử nhiều phương án** (so sánh nhiều khách / nhiều kỳ hạn)
-- Chưa có **Share Card dạng ảnh** để gửi Zalo nhanh trên điện thoại
+- Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, có thể bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
+- Bảng so sánh kỳ hạn (v1.6) dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
 - Chưa có test tự động đóng gói; hiện kiểm tra bằng script độc lập + browser/manual QA.
 
 ---
@@ -202,16 +205,28 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, kỳ hạn 36 tháng:
 - ✅ Bảng chi tiết tự thu gọn mặc định trên mobile, có nút “Xem chi tiết từng tháng”
 - ✅ Copy Summary bổ sung lợi ích tín chấp và tỷ lệ trả nợ nếu có nhập thu nhập
 
-### 🟡 v1.3 — Share Card + hoàn thiện tư vấn
-- **Share Card dạng ảnh** để gửi Zalo nhanh trên điện thoại
-- **Phí phụ thế chấp** (thẩm định + công chứng + bảo hiểm) → so sánh tổng chi phí thực, không chỉ tiền trả ngân hàng
-- **Nhiều giai đoạn lãi thả nổi** (Y1, Y2, Y3+) — sát thực tế VPBank hơn
-- **Mô phỏng trả nợ trước hạn** (phí phạt + lãi tiết kiệm)
+### 🔴 v1.3 — HOÀN THÀNH (2026-05-19)
+- ✅ Sửa lỗi Safari iOS Canvas API.
+- ✅ Bổ sung UI hints cho người dùng iPhone/iPad trong Modal Share Card.
+- ✅ Sanitize filename khi download ảnh.
+- ✅ Input validation cho các trường nhập lãi suất có visual warnings.
 
-### 🟢 v1.4 — Trải nghiệm khi gặp khách
-- **Lưu nhiều phương án** (localStorage) — so sánh giữa các khách / kỳ hạn
-- **So sánh nhiều kỳ hạn cùng 1 view** — bảng 12/24/36/48/60/72/84 song song
-- **Validation input** — cảnh báo lãi suất ngoài khoảng hợp lý của VPBank
+### 🔴 v1.4a — HOÀN THÀNH (2026-05-19)
+- ✅ **Phí phụ thế chấp** (thẩm định + công chứng + bảo hiểm) → so sánh tổng chi phí thực
+
+### 🔴 v1.4b — HOÀN THÀNH (2026-05-19)
+- ✅ **Nhiều giai đoạn lãi thả nổi** (Y1, Y2, Y3+) — sát thực tế VPBank hơn
+
+### 🔴 v1.4c — HOÀN THÀNH (2026-05-19)
+- ✅ **Mô phỏng trả nợ trước hạn** (tất toán sau khi đã đóng kỳ M, tính thêm phí phạt trên dư nợ còn lại)
+
+### 🟢 v1.5 — HOÀN THÀNH (2026-05-20)
+- **Lưu nhiều phương án** (localStorage) — lưu tối đa 5 cấu hình tính toán.
+- **Đồng bộ bản deploy**: `index.html` và `VPBank_TinChap_TheChap_Calculator.html` cùng nội dung.
+- **Ổn định làm tròn tháng cuối TC**: tổng gốc Tín Chấp footer khớp đúng số tiền vay.
+
+### 🔴 v1.6 — HOÀN THÀNH (2026-05-20)
+- ✅ **So sánh tất cả kỳ hạn cùng 1 view** — bảng 7 cột (12/24/36/48/60/72/84T) song song: TC/tháng, TH T1, TH T13, Tổng TC, Tổng TH thực, chênh lệch, nhận định MSO. Kỳ hạn đang chọn được highlight xanh.
 
 ### 🔵 v2.0+ — Mở rộng nghiệp vụ
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)
