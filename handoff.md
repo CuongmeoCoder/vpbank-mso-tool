@@ -1,5 +1,5 @@
 # 📋 HANDOFF — VPBank MSO Tool: Tín Chấp vs Thế Chấp
-> **Phiên bản:** v1.6 · **Ngày cập nhật:** 20/05/2026 · **Tác giả:** MSO NienKim × Claude AI
+> **Phiên bản:** v1.7 · **Ngày cập nhật:** 22/05/2026 · **Tác giả:** MSO NienKim × Claude AI
 
 ---
 
@@ -19,21 +19,40 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 
 ## 2. File deliverable
 
-| File | Mô tả |
-|------|-------|
-| `VPBank_TinChap_TheChap_Calculator.html` | Web App chính (v1.6) — mở bằng Chrome/Edge/Safari/mobile browser |
-| `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — giữ lại để rollback nếu cần |
+### Trang deploy (GitHub Pages)
+
+| URL / File | Mô tả |
+|-----------|-------|
+| `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.7): nhập số tiền, lãi suất, xem bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
+| `/compare.html` | **Trang so sánh đầy đủ** (v1.6): TC vs TH side-by-side, phí phụ TH, bảng 7 kỳ hạn song song. |
+| `VPBank_TinChap_TheChap_Calculator.html` | Bản offline share — gửi qua Zalo/email, mở bằng Chrome/Edge/Safari/mobile browser. Nội dung đồng bộ với `compare.html`. |
+| `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — rollback nếu cần |
 | `Bang_Tinh_TC_NienKim_Vs_TH_GiamDan_ThaNoi.xlsx` | File Excel gốc (nguồn tham khảo cấu trúc) |
 | `handoff.md` | Tài liệu này |
+
+### Module tính toán + Test
+
+| File | Mô tả |
+|------|-------|
+| `src/calculator.js` | `buildRows()` + `applyDisplayRounding()` — core calc, named ES module exports |
+| `src/fees.js` | `computeFeesForTerm()` — tính tổng phí phụ TH theo kỳ hạn |
+| `tests/calculator.test.js` | 15 test cases: regression, invariants, tier boundary, edge cases, prepay |
+| `tests/fees.test.js` | 7 test cases: feeBaoHiem × năm, tổ hợp đầy đủ |
+| `package.json` | `"type": "module"` + vitest |
+
+**Chạy test:** `npm test` (cần Node.js + chạy `npm install` lần đầu)
 
 ---
 
 ## 3. Cách sử dụng
 
 ### Mở tool
-- **Laptop/PC:** Double-click file `.html` → mở bằng Chrome hoặc Edge
-- **Điện thoại:** Copy file vào điện thoại → mở bằng Chrome mobile
+- **Online (GitHub Pages):** https://cuongmeocoder.github.io/vpbank-mso-tool — `index.html` (TC-only) hoặc `/compare.html` (TC vs TH)
+- **Laptop/PC offline:** Double-click `VPBank_TinChap_TheChap_Calculator.html` → mở bằng Chrome hoặc Edge
+- **Điện thoại offline:** Copy file vào điện thoại → mở bằng Chrome mobile
 - **Chia sẻ nhanh:** Gửi file `.html` qua Zalo/email → đồng nghiệp mở ngay, không cần cài gì
+
+> **Lưu ý 2 trang:** `index.html` chỉ có Tín Chấp. Để so sánh TC vs TH, dùng `compare.html` hoặc bấm link "⚖️ Xem So Sánh Tín Chấp vs Thế Chấp →" ở trang chủ.
 
 ### Nhập thông số
 | Trường | Mô tả | Mặc định |
@@ -113,38 +132,46 @@ Kết quả:
 
 ---
 
-## 5. Cấu trúc code (single HTML file)
+## 5. Cấu trúc code
 
+### index.html — Tín Chấp only (~231 KB)
 ```
-VPBank_TinChap_TheChap_Calculator.html  (~231 KB sau khi nhúng Chart.js inline)
-├── <script>          Chart.js 4.4.1 UMD nhúng inline (≈204 KB)
-├── <style>           CSS responsive + @media print (v1.1)
-├── Header            Logo + tiêu đề + Tên KH/MSO (ẩn nếu trống)
-├── Input Card        Tên KH, Tên MSO, Số tiền, 3 lãi suất, 7 kỳ hạn tabs
-├── Actions Row       📋 Copy Summary | 📄 Xuất PDF  (v1.1)
-├── Sales Focus       Kết luận nhanh + tỷ lệ trả nợ / thu nhập (v1.2)
-├── Summary Row       3 summary cards (TC / TH / Chênh lệch)
-├── Benefits Card     4 lợi ích tín chấp VPBank (v1.2)
-├── Insight Card      4 ô MSO lập luận — tự cập nhật số
-├── Chart Card        Line chart Chart.js
-├── Table Card        Bảng 12 cột scrollable; mobile tự thu gọn (v1.2)
-├── Toast div         Thông báo "Đã sao chép ✅" (v1.1)
+index.html
+├── <script>          Chart.js 4.4.1 UMD nhúng inline (≈204 KB) — 100% offline
+├── <style>           CSS responsive + @media print
+├── Header            Logo + tiêu đề + link → compare.html
+├── Input Card        Tên KH, Tên MSO, Số tiền, lãi suất TC, 7 kỳ hạn tabs
+├── Sales Focus       Kết luận nhanh + tỷ lệ trả nợ / thu nhập
+├── Summary Row       2 summary cards (TC tháng / Tổng TC)
+├── Chart + Table     TC only
+├── Comparison Card   So sánh 7 kỳ hạn TC song song (v1.6)
+├── History Card      Lưu tối đa 5 phương án (localStorage, TTL 30 ngày) (v1.5)
 └── <script>
-    ├── buildRows()      Tính toán core (TC + TH)
-    ├── applyDisplayRounding() Cách C: làm tròn số hiển thị + xử lý phần lẻ tháng cuối (v1.1.1)
-    ├── renderTable()    Render bảng + footer cộng số đang hiển thị
-    ├── renderChart()    Render Chart.js
-    ├── updateSummary()  Cập nhật summary + insight
-    ├── updateSalesView() Cập nhật kết luận nhanh + tỷ lệ trả nợ / thu nhập (v1.2)
-    ├── updateNames()       Cập nhật tên KH/MSO trên header (v1.1)
-    ├── updatePrepay()      Mô phỏng tất toán trước hạn — dư nợ + phí phạt (v1.4c)
-    ├── renderComparison()  So sánh 7 kỳ hạn song song (v1.6)
-    ├── copySummary()       Build text + ghi clipboard (v1.1)
-    ├── exportPDF()         window.print() (v1.1)
-    └── calc()              Orchestrator
+    ├── buildRows()          Core calc TC + TH (dùng dummy TH tiers)
+    ├── applyDisplayRounding() Cách C
+    ├── renderComparison()   TC-only: 7 kỳ hạn, trả/tháng + tổng TC + % lãi
+    └── calc()               Orchestrator
 ```
 
-**Thư viện ngoài:** Không còn (v1.1 nhúng Chart.js inline → 100% offline)
+### compare.html — TC vs TH đầy đủ (~231 KB, đồng bộ với VPBank_TinChap_TheChap_Calculator.html)
+```
+compare.html
+├── Input Card        Tên KH, Tên MSO, Số tiền, TC rate, 3 TH tiers, phí phụ TH, 7 kỳ hạn
+│                     Phí phụ: thẩm định (one-time), công chứng (one-time),
+│                              bảo hiểm cháy nổ (mỗi năm × Math.ceil(KH/12)), phí khác (one-time)
+├── Summary Row       3 cards: TC / TH / Chênh lệch
+├── Insight Card      4 ô MSO lập luận
+├── Chart + Table     12 cột TC vs TH
+├── Comparison Card   7 kỳ hạn: TC/tháng, TH T1, TH T13, Tổng TC, Tổng TH thực, chênh lệch
+├── History Card      Lưu tối đa 5 phương án (localStorage, TTL 30 ngày)
+└── <script>
+    ├── buildRows()          Core calc TC + TH
+    ├── renderComparison()   TC vs TH: tổng TH thực = Σ totTH + feesForTerm
+    │                        feesForTerm = thamDinh + congChung + baoHiemNam×ceil(n/12) + khac
+    └── calc()               Orchestrator
+```
+
+**Thư viện ngoài:** Không có (Chart.js nhúng inline → 100% offline)
 
 ---
 
@@ -175,12 +202,13 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 ---
 
-## 8. Giới hạn hiện tại (v1.6)
+## 8. Giới hạn hiện tại (v1.7)
 
-- Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, có thể bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
-- Bảng so sánh kỳ hạn (v1.6) dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
-- **Phí phụ TH trong bảng so sánh**: phí thẩm định, công chứng, phí khác là one-time (giữ nguyên mọi kỳ hạn); **phí bảo hiểm cháy nổ** nhân theo `Math.ceil(n/12)` riêng cho từng cột kỳ hạn n — đảm bảo kỳ hạn dài hơn phản ánh đúng tổng bảo hiểm thực tế. Tổng TH thực của main summary (card Kết Quả) vẫn giữ `feeBaoHiem × 1 năm` như hiện tại.
-- Chưa có test tự động đóng gói; hiện kiểm tra bằng script độc lập + browser/manual QA.
+- Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, TTL 30 ngày. Bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
+- Bảng so sánh kỳ hạn dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
+- **Phí bảo hiểm cháy nổ** (`feeBaoHiem`) là phí **mỗi năm**. Trong bảng so sánh 7 kỳ hạn, mỗi cột nhân `Math.ceil(n/12)` → kỳ hạn 84T = 7 năm. Main summary card dùng đúng số năm của KH đang chọn.
+- `src/calculator.js` và `src/fees.js` là ES modules, **không dùng được trực tiếp trong file HTML mở bằng `file://`** (CORS). Dùng cho vitest test only; logic tương đương đã inline trong HTML.
+- Test suite (`npm test`) cần Node.js và `npm install` — không chạy được trên trình duyệt.
 
 ---
 
@@ -228,6 +256,12 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 ### 🔴 v1.6 — HOÀN THÀNH (2026-05-20)
 - ✅ **So sánh tất cả kỳ hạn cùng 1 view** — bảng 7 cột (12/24/36/48/60/72/84T) song song: TC/tháng, TH T1, TH T13, Tổng TC, Tổng TH thực, chênh lệch, nhận định MSO. Kỳ hạn đang chọn được highlight xanh.
+- ✅ **Fix feeBaoHiem per-term**: bảng so sánh nhân `feeBaoHiem × Math.ceil(n/12)` thay vì cố định 1 năm — label đổi thành "Bảo hiểm cháy nổ (mỗi năm)".
+
+### 🟢 v1.7 — HOÀN THÀNH (2026-05-22)
+- ✅ **2-page architecture**: `index.html` = Tín Chấp only (home); `compare.html` = TC vs TH đầy đủ (giữ nguyên nội dung v1.6).
+- ✅ **Privacy (Sprint 3)**: TTL 30 ngày localStorage, nút "Xóa tất cả", disclaimer "🔒 Dữ liệu lưu cục bộ trên máy của bạn và tự động xóa sau 30 ngày."
+- ✅ **Test suite**: `src/calculator.js`, `src/fees.js`, `tests/calculator.test.js` (15 cases), `tests/fees.test.js` (7 cases) — `npm test` dùng vitest.
 
 ### 🔵 v2.0+ — Mở rộng nghiệp vụ
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)

@@ -3,3 +3,4 @@ cf-deploy/
 .netlify/
 netlify_cookies.txt
 netlify_private_do_not_share.md
+node_modules/

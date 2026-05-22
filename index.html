@@ -1180,7 +1180,7 @@
       <div style="text-align:center; margin-top:4px; font-size:12px; color:var(--gray)">
         <a href="compare.html" style="color:var(--blue); text-decoration:none;">⚖️ Xem So Sánh Tín Chấp vs Thế Chấp →</a>
       </div>
-      <p>MSO Insight — Phân Tích Dòng Tiền Niên Kim vs Giảm Dần</p>
+      <p>MSO Insight — Phân Tích Dòng Tiền Tín Chấp</p>
       <div class="hdr-names" id="hdr-names" style="display:none">
         <span>👤 KH: <b id="hdr-kh">—</b></span>
         <span>🤝 MSO: <b id="hdr-mso">—</b></span>
@@ -1286,11 +1286,17 @@
 
     <!-- v1.5 HISTORY -->
     <div class="card" id="history-card">
-      <div class="card-hd">
-        <div class="ico" style="background:var(--blue-l)">🗂️</div>
-        Lịch Sử Tính Toán (Lưu tối đa 5)
+      <div class="card-hd" style="justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="ico" style="background:var(--blue-l)">🗂️</div>
+          Lịch Sử Tính Toán (Lưu tối đa 5)
+        </div>
+        <button class="table-toggle" style="color:var(--red); border-color:var(--red-l); padding:4px 8px; font-size:11px;" onclick="clearHistory()">Xóa tất cả</button>
       </div>
       <div class="card-bd" id="history-card-bd" style="padding:0;">
+        <div style="padding: 10px 16px; font-size: 11px; color: var(--gray); background: var(--gray-l); border-bottom: 1px solid var(--border);">
+          🔒 Dữ liệu lưu cục bộ trên máy của bạn và tự động xóa sau 30 ngày.
+        </div>
         <ul id="history-list">
           <!-- populated by renderHistory() -->
         </ul>
@@ -1408,7 +1414,7 @@
     <div class="card">
       <div class="card-hd">
         <div class="ico" style="background:var(--green-l)">📊</div>
-        Biểu Đồ So Sánh Dòng Tiền Hàng Tháng
+        Biểu Đồ Dòng Tiền Hàng Tháng
       </div>
       <div class="card-bd">
         <div class="chart-wrap"><canvas id="ch"></canvas></div>
@@ -2006,10 +2012,19 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
       })[match] || match);
     }
 
+    const TTL_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+
     function getHistory() {
       try {
         const data = JSON.parse(localStorage.getItem('vpbank_history'));
-        return Array.isArray(data) ? data : [];
+        if (!Array.isArray(data)) return [];
+        const now = Date.now();
+        const validData = data.filter(item => {
+          if (!item.timestamp) return true;
+          return (now - item.timestamp) < TTL_30_DAYS;
+        });
+        if (validData.length !== data.length) setHistory(validData);
+        return validData;
       } catch (e) {
         return [];
       }
@@ -2060,7 +2075,8 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
         msoname: document.getElementById('msoname').value,
         income: parseVN(document.getElementById('income').value),
         prepayM: parseInt(document.getElementById('prepayM').value) || '',
-        prepayRate: parseFloat(document.getElementById('prepayRate').value)
+        prepayRate: parseFloat(document.getElementById('prepayRate').value),
+        timestamp: Date.now()
       };
 
       let history = getHistory();
@@ -2120,6 +2136,14 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
       history.splice(idx, 1);
       setHistory(history);
       renderHistory();
+    }
+
+    function clearHistory() {
+      if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tính toán?')) {
+        localStorage.removeItem('vpbank_history');
+        renderHistory();
+        showToast('Đã xóa lịch sử 🗑️');
+      }
     }
 
     // ── INIT ──────────────────────────────────────────────

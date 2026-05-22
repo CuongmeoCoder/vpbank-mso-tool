@@ -1,0 +1,13 @@
+{
+  "name": "vpbank-mso-tool",
+  "version": "1.6.0",
+  "type": "module",
+  "description": "VPBank MSO — Công cụ tư vấn vay Tín Chấp & Thế Chấp",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^latest"
+  }
+}

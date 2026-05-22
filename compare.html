@@ -1285,7 +1285,7 @@
               </div>
             </div>
             <div class="fld">
-              <label>Bảo hiểm cháy nổ (Năm 1)</label>
+              <label>Bảo hiểm tài sản/năm</label>
               <div class="fld-inner">
                 <input type="text" id="feeBaoHiem" placeholder="0" inputmode="numeric" oninput="fmtAndCalc(this)">
                 <span class="unit">VNĐ</span>
@@ -1342,11 +1342,17 @@
 
     <!-- v1.5 HISTORY -->
     <div class="card" id="history-card">
-      <div class="card-hd">
-        <div class="ico" style="background:var(--blue-l)">🗂️</div>
-        Lịch Sử Tính Toán (Lưu tối đa 5)
+      <div class="card-hd" style="justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="ico" style="background:var(--blue-l)">🗂️</div>
+          Lịch Sử Tính Toán (Lưu tối đa 5)
+        </div>
+        <button class="table-toggle" style="color:var(--red); border-color:var(--red-l); padding:4px 8px; font-size:11px;" onclick="clearHistory()">Xóa tất cả</button>
       </div>
       <div class="card-bd" id="history-card-bd" style="padding:0;">
+        <div style="padding: 10px 16px; font-size: 11px; color: var(--gray); background: var(--gray-l); border-bottom: 1px solid var(--border);">
+          🔒 Dữ liệu lưu cục bộ trên máy của bạn và tự động xóa sau 30 ngày.
+        </div>
         <ul id="history-list">
           <!-- populated by renderHistory() -->
         </ul>
@@ -1978,7 +1984,7 @@
       const feeCongChung = parseVN(document.getElementById('feeCongChung').value);
       const feeBaoHiem = parseVN(document.getElementById('feeBaoHiem').value);
       const feeKhac = parseVN(document.getElementById('feeKhac').value);
-      const totalFeesTH = feeThamDinh + feeCongChung + feeBaoHiem + feeKhac;
+      const totalFeesTH = feeThamDinh + feeCongChung + feeBaoHiem * Math.ceil(KH / 12) + feeKhac;
 
       if (P <= 0 || isNaN(P)) return;
 
@@ -2254,10 +2260,19 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
       })[match] || match);
     }
 
+    const TTL_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+
     function getHistory() {
       try {
         const data = JSON.parse(localStorage.getItem('vpbank_history'));
-        return Array.isArray(data) ? data : [];
+        if (!Array.isArray(data)) return [];
+        const now = Date.now();
+        const validData = data.filter(item => {
+          if (!item.timestamp) return true;
+          return (now - item.timestamp) < TTL_30_DAYS;
+        });
+        if (validData.length !== data.length) setHistory(validData);
+        return validData;
       } catch (e) {
         return [];
       }
@@ -2316,7 +2331,8 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
         feeBaoHiem: parseVN(document.getElementById('feeBaoHiem').value),
         feeKhac: parseVN(document.getElementById('feeKhac').value),
         prepayM: parseInt(document.getElementById('prepayM').value) || '',
-        prepayRate: parseFloat(document.getElementById('prepayRate').value)
+        prepayRate: parseFloat(document.getElementById('prepayRate').value),
+        timestamp: Date.now()
       };
 
       let history = getHistory();
@@ -2383,6 +2399,14 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
       history.splice(idx, 1);
       setHistory(history);
       renderHistory();
+    }
+
+    function clearHistory() {
+      if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tính toán?')) {
+        localStorage.removeItem('vpbank_history');
+        renderHistory();
+        showToast('Đã xóa lịch sử 🗑️');
+      }
     }
 
     // ── INIT ──────────────────────────────────────────────
