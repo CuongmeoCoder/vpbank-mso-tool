@@ -24,7 +24,7 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 | URL / File | Mô tả |
 |-----------|-------|
 | `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.7): nhập số tiền, lãi suất, xem bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
-| `/compare.html` | **Trang so sánh đầy đủ** (v1.6): TC vs TH side-by-side, phí phụ TH, bảng 7 kỳ hạn song song. |
+| `/compare.html` | **Trang so sánh đầy đủ** (v1.7): TC vs TH side-by-side, phí phụ TH, bảng 7 kỳ hạn song song. |
 | `VPBank_TinChap_TheChap_Calculator.html` | Bản offline share — gửi qua Zalo/email, mở bằng Chrome/Edge/Safari/mobile browser. Nội dung đồng bộ với `compare.html`. |
 | `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — rollback nếu cần |
 | `Bang_Tinh_TC_NienKim_Vs_TH_GiamDan_ThaNoi.xlsx` | File Excel gốc (nguồn tham khảo cấu trúc) |
@@ -134,7 +134,7 @@ Kết quả:
 
 ## 5. Cấu trúc code
 
-### index.html — Tín Chấp only (~231 KB)
+### index.html — Tín Chấp only (single-file HTML, Chart.js inline)
 ```
 index.html
 ├── <script>          Chart.js 4.4.1 UMD nhúng inline (≈204 KB) — 100% offline
@@ -153,7 +153,7 @@ index.html
     └── calc()               Orchestrator
 ```
 
-### compare.html — TC vs TH đầy đủ (~231 KB, đồng bộ với VPBank_TinChap_TheChap_Calculator.html)
+### compare.html — TC vs TH đầy đủ (single-file HTML, đồng bộ với VPBank_TinChap_TheChap_Calculator.html)
 ```
 compare.html
 ├── Input Card        Tên KH, Tên MSO, Số tiền, TC rate, 3 TH tiers, phí phụ TH, 7 kỳ hạn
@@ -259,9 +259,46 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 - ✅ **Fix feeBaoHiem per-term**: bảng so sánh nhân `feeBaoHiem × Math.ceil(n/12)` thay vì cố định 1 năm — label đổi thành "Bảo hiểm cháy nổ (mỗi năm)".
 
 ### 🟢 v1.7 — HOÀN THÀNH (2026-05-22)
-- ✅ **2-page architecture**: `index.html` = Tín Chấp only (home); `compare.html` = TC vs TH đầy đủ (giữ nguyên nội dung v1.6).
-- ✅ **Privacy (Sprint 3)**: TTL 30 ngày localStorage, nút "Xóa tất cả", disclaimer "🔒 Dữ liệu lưu cục bộ trên máy của bạn và tự động xóa sau 30 ngày."
+- ✅ **2-page architecture**: `index.html` = Tín Chấp only (home); `compare.html` = TC vs TH đầy đủ.
+- ✅ **Privacy (Sprint 3)**: TTL 30 ngày localStorage, nút "Xóa tất cả", disclaimer "🔒 Dữ liệu lịch sử chỉ lưu trên thiết bị này, không gửi lên server, và tự động xóa sau 30 ngày."
 - ✅ **Test suite**: `src/calculator.js`, `src/fees.js`, `tests/calculator.test.js` (15 cases), `tests/fees.test.js` (7 cases) — `npm test` dùng vitest.
+- ✅ **Sprint 4 Release QA**: checklist manual QA cho `index.html`, `compare.html`, GitHub Pages, và bản offline share.
+
+---
+
+## 10. Sprint 4 Release QA Checklist
+
+### Test tự động
+- Chạy `npm test` trước khi deploy.
+- Kỳ vọng: `tests/calculator.test.js` và `tests/fees.test.js` đều pass.
+
+### Manual QA — `index.html` (Tín Chấp only)
+- Mở `/` hoặc double-click `index.html`.
+- Đổi số tiền vay, lãi suất TC, kỳ hạn 12/36/84.
+- Kiểm tra summary, chart, bảng chi tiết và bảng 7 kỳ hạn TC cập nhật đúng.
+- Lưu phương án, tải lại phương án, xoá 1 dòng, bấm "Xóa tất cả".
+- Kiểm tra disclaimer lịch sử: dữ liệu chỉ lưu trên thiết bị, không gửi server, tự xoá sau 30 ngày.
+- Kiểm tra Copy Summary, Share Card, Xuất PDF.
+- Bấm link "⚖️ Xem So Sánh Tín Chấp vs Thế Chấp →" sang `compare.html`.
+
+### Manual QA — `compare.html` (TC vs TH)
+- Mở `/compare.html` trực tiếp.
+- Đổi TC rate, TH Y1/Y2/Y3+, số tiền vay, kỳ hạn.
+- Nhập phí bảo hiểm/năm `5.000.000` và kiểm tra:
+  - 12T = 5 triệu
+  - 36T = 15 triệu
+  - 84T = 35 triệu
+- Kiểm tra summary, chart, bảng chi tiết, bảng so sánh 7 kỳ hạn.
+- Test tất toán trước hạn với `M=1` và `M=KH-1`.
+- Lưu/tải/xoá history, Copy Summary, Share Card, Xuất PDF.
+- Bấm link "← Về Trang Tín Chấp" về `index.html`.
+
+### Deploy QA — GitHub Pages
+- Root URL mở đúng `index.html`: `https://cuongmeocoder.github.io/vpbank-mso-tool/`
+- URL con mở đúng `compare.html`: `https://cuongmeocoder.github.io/vpbank-mso-tool/compare.html`
+- Link nội bộ dùng relative path (`compare.html`, `index.html`) để chạy tốt cả GitHub Pages và file offline.
+- `src/`, `tests/`, `package.json` có thể nằm trong repo public; HTML deploy không import trực tiếp các module này.
+- `VPBank_TinChap_TheChap_Calculator.html` phải đồng bộ nội dung với `compare.html` nếu còn dùng để gửi offline.
 
 ### 🔵 v2.0+ — Mở rộng nghiệp vụ
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)
@@ -270,7 +307,7 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 ---
 
-## 10. Session Log — Nhật ký phiên làm việc
+## 11. Session Log — Nhật ký phiên làm việc
 
 ### 🗓 2026-05-18 · Phát hành v1.2 — Mobile Sales View
 
