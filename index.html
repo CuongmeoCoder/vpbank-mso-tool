@@ -1235,10 +1235,24 @@
             <span class="fld-hint">Dùng để xem tỷ lệ trả nợ / thu nhập</span>
           </div>
 
+          <!-- v1.8 Rate Presets -->
+          <div class="fld" style="grid-column: 1 / -1;">
+            <label>Kịch Bản Tư Vấn Tín Chấp</label>
+            <div class="fld-inner">
+              <select id="ratePreset" onchange="applyPreset()" style="width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; font-weight:700; outline:none; background:#fff; color:#1a202c; cursor:pointer;">
+                <option value="">Tùy chỉnh (MSO nhập tay)</option>
+                <option value="15">Tham khảo 15%</option>
+                <option value="19">Tham khảo 19%</option>
+                <option value="21">Tham khảo 21%</option>
+              </select>
+            </div>
+            <span class="fld-hint" style="color:var(--orange); display:block; margin-top:4px;">⚠️ Lãi suất trên là ví dụ tham khảo. MSO nhập lãi suất thực tế theo sản phẩm.</span>
+          </div>
+
           <div class="fld">
             <label>TÍN CHẤP — Lãi suất cố định (%/năm)</label>
             <div class="fld-inner">
-              <input type="number" id="lTC" value="19" min="1" max="60" step="0.1" oninput="calc()">
+              <input type="number" id="lTC" value="19" min="1" max="60" step="0.1" oninput="onManualRateChange()">
               <span class="unit">%</span>
             </div>
             <span class="fld-hint">Lãi suất Niên Kim — cố định suốt kỳ vay</span>
@@ -1469,7 +1483,7 @@
       </div>
     </div>
 
-    <div class="foot">🏦 VPBank MSO Tool v1.7 · Dữ liệu mang tính tham khảo · Lãi suất thực tế theo từng sản phẩm
+    <div class="foot">🏦 VPBank MSO Tool v1.8 · Dữ liệu mang tính tham khảo · Lãi suất thực tế theo từng sản phẩm
       cụ
       thể
     </div>
@@ -1479,6 +1493,7 @@
     // ── STATE ──────────────────────────────────────────────
     let KH = 36;
     let CH = null;
+    let activePreset = null;
 
     // ── FORMAT UTILS ──────────────────────────────────────
     const fmtVN = n => new Intl.NumberFormat('vi-VN').format(Math.round(n));
@@ -1503,6 +1518,19 @@
         else if (v >= 1e6) h.textContent = '= ' + (v / 1e6).toFixed(1).replace('.', ',') + '  triệu đồng';
         else h.textContent = '';
       }
+      calc();
+    }
+
+    // ── PRESETS ───────────────────────────────────────────
+    function applyPreset() {
+      const sel = document.getElementById('ratePreset');
+      activePreset = sel.value || null;
+      if (activePreset) document.getElementById('lTC').value = sel.value;
+      calc();
+    }
+    function onManualRateChange() {
+      activePreset = null;
+      document.getElementById('ratePreset').value = '';
       calc();
     }
 
@@ -1813,6 +1841,7 @@
     function copySummary() {
       const stv = document.getElementById('stv').value;
       const lTC = document.getElementById('lTC').value;
+      const presetStr = activePreset ? '(Ví dụ tham khảo)' : '(MSO nhập tay)';
       const kh = (document.getElementById('khname').value || '').trim();
       const mso = (document.getElementById('msoname').value || '').trim();
       const tcM = document.getElementById('s-tc-m').textContent;
@@ -1827,7 +1856,7 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
 💰 Số tiền vay: ${stv} VNĐ
 📅 Kỳ hạn: ${KH} tháng
 
-📌 TÍN CHẤP (Niên Kim ${lTC}%/năm — cố định)
+📌 TÍN CHẤP (Niên Kim ${lTC}%/năm — cố định) ${presetStr}
    • Trả hàng tháng: ${tcM}
    • ${tcT}`;
 
@@ -2124,6 +2153,8 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
 
       ['stv', 'income'].forEach(id => { document.getElementById(id).value = item[id] ? fmtVN(item[id]) : ''; });
       ['lTC', 'khname', 'msoname', 'prepayM'].forEach(id => { document.getElementById(id).value = item[id] !== undefined && item[id] !== null ? item[id] : ''; });
+      activePreset = null;
+      document.getElementById('ratePreset').value = '';
       document.getElementById('prepayRate').value = item.prepayRate;
 
       setKH(item.kh);

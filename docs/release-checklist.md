@@ -3,7 +3,7 @@
 ## 1. Automated QA
 
 - [ ] Run `npm test`.
-- [ ] Expected: `tests/calculator.test.js` and `tests/fees.test.js` pass, 22/22 tests.
+- [ ] Expected: `tests/calculator.test.js`, `tests/fees.test.js`, and `tests/presets.test.js` pass, 24/24 tests.
 - [ ] Run `npm run smoke`.
 - [ ] Expected:
   - `index.html` opens with `file://`.
@@ -28,6 +28,9 @@
 - [ ] Confirm privacy disclaimer says history stays on device, is not sent to server, and auto-deletes after 30 days.
 - [ ] Check Copy Summary, Share Card, and Export PDF.
 - [ ] Click the link to `compare.html`.
+- [ ] Chọn Kịch bản Preset (VD: 15%): kiểm tra input Lãi suất TC và bảng tính tự động cập nhật.
+- [ ] Xoá số ở ô Lãi suất TC và tự gõ: kiểm tra Dropdown Kịch bản tự reset về "Tùy chỉnh (MSO nhập tay)".
+- [ ] Copy Summary khi chọn Preset: hiển thị `(Ví dụ tham khảo)`. Sửa bằng tay: hiển thị `(MSO nhập tay)`.
 
 ## 3. Manual QA - `compare.html` TC vs TH
 
@@ -68,6 +71,7 @@
 **Tested:**
 - npm test
 - npm run smoke
+- Manual QA presets logic
 - Manual QA: index.html
 - Manual QA: compare.html
 - GitHub Pages deploy check

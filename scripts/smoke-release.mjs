@@ -271,6 +271,75 @@ async function runPageSmoke(cdp, file) {
 
   if (file === 'index.html') {
     assert(pageState.hasCompareLink, `${file}: missing relative link to compare.html.`);
+
+    await cdp.send(
+      'Emulation.setDeviceMetricsOverride',
+      {
+        width: 390,
+        height: 844,
+        deviceScaleFactor: 2,
+        mobile: true,
+      },
+      sessionId,
+    );
+    await sleep(100);
+
+    const presetState = await evalPage(
+      cdp,
+      sessionId,
+      `(() => {
+        const preset = document.querySelector('#ratePreset');
+        const rate = document.querySelector('#lTC');
+        const disclaimerVisible = (() => {
+          const text = 'Lãi suất trên là ví dụ tham khảo. MSO nhập lãi suất thực tế theo sản phẩm.';
+          const node = Array.from(document.querySelectorAll('.fld-hint')).find((el) => el.textContent.includes(text));
+          if (!node) return false;
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        })();
+
+        preset.value = '15';
+        preset.dispatchEvent(new Event('change', { bubbles: true }));
+        const afterPreset = {
+          rate: rate.value,
+          selectValue: preset.value,
+          activePreset,
+          summary: document.querySelector('#s-tc-ttl')?.textContent || '',
+        };
+
+        rate.value = '18';
+        rate.dispatchEvent(new Event('input', { bubbles: true }));
+        const afterManual = {
+          rate: rate.value,
+          selectValue: preset.value,
+          activePreset,
+          summary: document.querySelector('#s-tc-ttl')?.textContent || '',
+        };
+
+        localStorage.clear();
+        window.saveToHistory();
+        preset.value = '21';
+        preset.dispatchEvent(new Event('change', { bubbles: true }));
+        window.loadFromHistory(0);
+        const afterLoad = {
+          rate: rate.value,
+          selectValue: preset.value,
+          activePreset,
+        };
+
+        return { disclaimerVisible, afterPreset, afterManual, afterLoad };
+      })()`,
+    );
+
+    assert(presetState.disclaimerVisible, `${file}: preset disclaimer is missing or hidden.`);
+    assert(presetState.afterPreset.rate === '15', `${file}: preset did not update TC rate.`);
+    assert(presetState.afterPreset.selectValue === '15', `${file}: preset select did not keep selected value.`);
+    assert(presetState.afterPreset.activePreset === '15', `${file}: activePreset was not set after selecting preset.`);
+    assert(presetState.afterManual.rate === '18', `${file}: manual TC rate edit did not apply.`);
+    assert(presetState.afterManual.selectValue === '', `${file}: manual TC rate edit did not clear preset select.`);
+    assert(presetState.afterManual.activePreset === null, `${file}: manual TC rate edit did not clear activePreset.`);
+    assert(presetState.afterLoad.selectValue === '', `${file}: history load did not clear preset select.`);
+    assert(presetState.afterLoad.activePreset === null, `${file}: history load did not clear activePreset.`);
   }
   if (file === 'compare.html') {
     assert(pageState.hasHomeLink, `${file}: missing relative link to index.html.`);

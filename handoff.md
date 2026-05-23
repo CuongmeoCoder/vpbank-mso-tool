@@ -1,5 +1,5 @@
 # 📋 HANDOFF — VPBank MSO Tool: Tín Chấp vs Thế Chấp
-> **Phiên bản:** v1.7 · **Ngày cập nhật:** 22/05/2026 · **Tác giả:** MSO NienKim × Claude AI
+> **Phiên bản:** v1.8 · **Ngày cập nhật:** 23/05/2026 · **Tác giả:** MSO NienKim × Claude AI
 
 ---
 
@@ -23,7 +23,7 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 
 | URL / File | Mô tả |
 |-----------|-------|
-| `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.7): nhập số tiền, lãi suất, xem bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
+| `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.8): nhập số tiền, chọn preset tham khảo hoặc nhập tay lãi suất, xem bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
 | `/compare.html` | **Trang so sánh đầy đủ** (v1.7): TC vs TH side-by-side, phí phụ TH, bảng 7 kỳ hạn song song. |
 | `VPBank_TinChap_TheChap_Calculator.html` | Bản offline share — gửi qua Zalo/email, mở bằng Chrome/Edge/Safari/mobile browser. Nội dung đồng bộ với `compare.html`. |
 | `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — rollback nếu cần |
@@ -36,8 +36,10 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 |------|-------|
 | `src/calculator.js` | `buildRows()` + `applyDisplayRounding()` — core calc, named ES module exports |
 | `src/fees.js` | `computeFeesForTerm()` — tính tổng phí phụ TH theo kỳ hạn |
+| `src/presets.js` | `TC_PRESETS` array + `getPresetByRate()` — preset data, dùng cho vitest test only |
 | `tests/calculator.test.js` | 15 test cases: regression, invariants, tier boundary, edge cases, prepay |
 | `tests/fees.test.js` | 7 test cases: feeBaoHiem × năm, tổ hợp đầy đủ |
+| `tests/presets.test.js` | 2 test cases: preset list không rỗng, getPresetByRate |
 | `package.json` | `"type": "module"` + vitest |
 
 **Chạy test:** `npm test` (cần Node.js + chạy `npm install` lần đầu)
@@ -202,7 +204,7 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 ---
 
-## 8. Giới hạn hiện tại (v1.7)
+## 8. Giới hạn hiện tại (v1.8)
 
 - Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, TTL 30 ngày. Bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
 - Bảng so sánh kỳ hạn dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
@@ -347,7 +349,83 @@ handoff.md                    # cập nhật roadmap + nguyên tắc giao việc
 - Đa ngôn ngữ.
 - Refactor lớn HTML thành framework/build tool.
 
-### 🔵 v2.0+ — Mở rộng nghiệp vụ sau Sprint 5
+### 🔴 v1.8 / Sprint 6 — Rate Presets + Sales Scenarios — HOÀN THÀNH (2026-05-23)
+
+**Goal:** Giảm thao tác nhập tay cho MSO bằng cách thêm preset lãi suất/kịch bản tư vấn, nhưng không thay đổi công thức tài chính lõi. Sprint 6 chỉ chuẩn hoá dữ liệu đầu vào và UX chọn nhanh; mọi phép tính vẫn đi qua logic v1.7 hiện có.
+
+**Phạm vi ưu tiên:** Cải thiện tư vấn TC-only trên `index.html` trước, sau đó mới cân nhắc đồng bộ sang `compare.html`.
+
+**Task list Sprint 6:**
+1. **Thiết kế preset data model**
+   - Tạo danh sách preset tối thiểu với label trung tính, ví dụ: `Mẫu A (18%)`, `Mẫu B (19%)`, hoặc `Tham khảo 19%`.
+   - Không dùng tên nghe như cam kết/chính sách chính thức như "TC tiêu chuẩn", "TC ưu đãi", "Gói VPBank".
+   - Mỗi preset chỉ set các field hiện có: lãi suất TC, kỳ hạn mặc định, ghi chú tư vấn.
+   - Không hard-code cam kết chính sách VPBank nếu chưa có nguồn nghiệp vụ xác nhận.
+2. **UI chọn preset trên home**
+   - Gemini phải spec trước DOM pattern sẽ dùng: button có `data-preset-id` hoặc `<select id="ratePreset">`. Smoke script phải dùng đúng selector đó.
+   - Thêm segmented control hoặc select ngay gần input lãi suất TC.
+   - Thêm disclaimer inline ngay dưới UI chọn preset: "Lãi suất trên là ví dụ tham khảo. MSO nhập lãi suất thực tế theo sản phẩm."
+   - Disclaimer phải visible trên mobile 390px mà không cần scroll trong vùng preset.
+   - Khi chọn preset, cập nhật `lTC` và giữ khả năng MSO nhập tay.
+   - `activePreset = null` khi tải trang, khi MSO sửa tay `lTC`, và khi load từ history.
+   - History load luôn set `activePreset = null`; không cố đoán preset từ lãi suất đã lưu.
+   - Hiển thị nhãn rõ nếu đang dùng Custom/MSO nhập tay.
+3. **Copy Summary / Share Card wording**
+   - Copy Summary ghi rõ `(Ví dụ tham khảo)` nếu đang dùng preset.
+   - Copy Summary ghi rõ `(MSO nhập tay)` nếu `activePreset = null`.
+   - Share Card preset label là out of scope Sprint 6.
+4. **Test coverage**
+   - Thêm unit test cho pure helper nếu tách `src/presets.js`.
+   - Smoke test thêm case chọn preset trên `index.html` nếu UI được implement.
+5. **Docs + release checklist**
+   - Cập nhật `docs/release-checklist.md` với manual QA cho preset.
+   - Cập nhật `handoff.md` phần giới hạn: preset chỉ hỗ trợ tư vấn, không thay thế chính sách lãi suất thực tế.
+
+**File structure dự kiến:**
+```text
+src/
+└── presets.js                 # preset data + helper chọn default, dùng cho test
+
+tests/
+└── presets.test.js            # test preset helper, không test DOM
+
+index.html                    # UI chọn preset TC-only + copy/share wording
+scripts/
+└── smoke-release.mjs          # thêm smoke case preset nếu cần
+docs/
+└── release-checklist.md       # checklist QA preset
+handoff.md                    # cập nhật roadmap, risks, giới hạn
+```
+
+**Risks:**
+- Preset lãi suất có thể bị hiểu là chính sách chính thức; cần wording "tham khảo/tùy chỉnh theo sản phẩm thực tế".
+- Nếu preset update cả `compare.html` ngay trong Sprint 6, scope sẽ rộng và dễ lệch TC-only home. Nên bắt đầu ở `index.html`.
+- Không được để preset làm mất khả năng nhập tay, vì MSO cần nhập số custom theo từng hồ sơ.
+- Nếu thêm helper module, HTML offline vẫn không được import ES module qua `file://`; logic cần inline hoặc dùng data đơn giản trong HTML, còn `src/presets.js` phục vụ test tương đương.
+- Nếu smoke selector không khớp DOM pattern Gemini chọn, QA automation sẽ false fail; Gemini phải ghi selector trong spec trước khi code.
+
+**QA checklist Sprint 6:**
+- `npm test` pass, bao gồm test preset helper nếu có.
+- `npm run smoke` pass.
+- Manual: chọn từng preset trên `index.html`, kiểm tra `lTC`, summary, chart, bảng 7 kỳ hạn cập nhật.
+- Manual: sửa tay lãi suất sau khi chọn preset, UI chuyển về `Custom` hoặc hiển thị custom rõ ràng.
+- Manual: Copy Summary ghi đúng `(Ví dụ tham khảo)` hoặc `(MSO nhập tay)`.
+- Manual: load từ history, kiểm tra `activePreset = null` / trạng thái MSO nhập tay.
+- Manual: disclaimer visible trên mobile 390px mà không cần scroll trong vùng preset.
+- Manual: chọn preset, sửa tay, load history không gây console error.
+- Regression: `compare.html` và offline share vẫn pass smoke, không bị thay đổi ngoài ý muốn.
+
+**Out of scope Sprint 6:**
+- Thêm sản phẩm vay mua xe/vay tiêu dùng.
+- Chạm `compare.html` hoặc `VPBank_TinChap_TheChap_Calculator.html`.
+- Thêm preset cho TH rates.
+- Tích hợp API hoặc hệ thống nội bộ.
+- Tự động cập nhật lãi suất từ server.
+- Thay đổi bất kỳ công thức tài chính nào.
+- Ghi preset label lên Share Card.
+- Refactor toàn bộ HTML sang build tool/framework.
+
+### 🔵 v2.0+ — Mở rộng nghiệp vụ sau Sprint 6
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)
 - Đa ngôn ngữ (VN/EN) cho khách nước ngoài
 - Đồng bộ ngược lên hệ thống nội bộ VPBank nếu cần
