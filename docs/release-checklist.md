@@ -31,6 +31,7 @@
 - [ ] Chọn Kịch bản Preset (VD: 15%): kiểm tra input Lãi suất TC và bảng tính tự động cập nhật.
 - [ ] Xoá số ở ô Lãi suất TC và tự gõ: kiểm tra Dropdown Kịch bản tự reset về "Tùy chỉnh (MSO nhập tay)".
 - [ ] Copy Summary khi chọn Preset: hiển thị `(Ví dụ tham khảo)`. Sửa bằng tay: hiển thị `(MSO nhập tay)`.
+- [ ] **Advisor note**: Kiểm tra `#preset-note` hiện "Dùng để minh hoạ..." khi chọn preset và "Đang dùng lãi suất tùy chỉnh..." khi sửa tay hoặc load history. Disclaimer màu cam vẫn luôn hiện.
 
 ## 3. Manual QA - `compare.html` TC vs TH
 

@@ -1,5 +1,5 @@
 # 📋 HANDOFF — VPBank MSO Tool: Tín Chấp vs Thế Chấp
-> **Phiên bản:** v1.8 · **Ngày cập nhật:** 23/05/2026 · **Tác giả:** MSO NienKim × Claude AI
+> **Phiên bản:** v1.9 · **Ngày cập nhật:** 23/05/2026 · **Tác giả:** MSO NienKim × Claude AI
 
 ---
 
@@ -23,7 +23,7 @@ Tool được xây dựng cho **MSO (Market Sales Officer) VPBank** nhằm:
 
 | URL / File | Mô tả |
 |-----------|-------|
-| `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.8): nhập số tiền, chọn preset tham khảo hoặc nhập tay lãi suất, xem bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
+| `/` → `index.html` | **Trang chủ — Tín Chấp only** (v1.9): nhập số tiền, chọn preset tham khảo hoặc nhập tay lãi suất, xem advisor note, bảng + chart + so sánh 7 kỳ hạn TC. Không có TH. |
 | `/compare.html` | **Trang so sánh đầy đủ** (v1.7): TC vs TH side-by-side, phí phụ TH, bảng 7 kỳ hạn song song. |
 | `VPBank_TinChap_TheChap_Calculator.html` | Bản offline share — gửi qua Zalo/email, mở bằng Chrome/Edge/Safari/mobile browser. Nội dung đồng bộ với `compare.html`. |
 | `VPBank_TinChap_TheChap_Calculator_v1.0_backup.html` | Bản v1.0 gốc — rollback nếu cần |
@@ -204,7 +204,7 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 
 ---
 
-## 8. Giới hạn hiện tại (v1.8)
+## 8. Giới hạn hiện tại (v1.9)
 
 - Lịch sử tính toán (localStorage) lưu tối đa 5 phương án, TTL 30 ngày. Bị xoá nếu xoá cache hoặc duyệt ở chế độ ẩn danh.
 - Bảng so sánh kỳ hạn dùng chung lãi suất đang nhập — không cho nhập lãi suất riêng từng kỳ hạn.
@@ -425,7 +425,87 @@ handoff.md                    # cập nhật roadmap, risks, giới hạn
 - Ghi preset label lên Share Card.
 - Refactor toàn bộ HTML sang build tool/framework.
 
-### 🔵 v2.0+ — Mở rộng nghiệp vụ sau Sprint 6
+### 🔴 v1.9 / Sprint 7 — Preset Governance + Advisor Notes — HOÀN THÀNH (2026-05-23)
+
+**Version policy:** Sprint 7 giữ nhánh `v1.x` vì tiếp tục cải thiện TC-only/preset, chưa thêm sản phẩm vay mới hoặc thay đổi nghiệp vụ lõi. `v2.0` để dành cho khi thêm module sản phẩm mới, đa ngôn ngữ lớn, hoặc cấu hình dữ liệu có phạm vi rộng hơn.
+
+**Goal:** Làm preset v1.8 dễ quản trị và dễ tư vấn hơn mà vẫn không biến preset thành chính sách chính thức. Sprint 7 tập trung vào ghi chú tư vấn, kiểm soát wording, và QA cho preset; không thay đổi công thức tài chính.
+
+**Phạm vi ưu tiên:** `index.html` TC-only, `src/presets.js`, `tests/presets.test.js`, `scripts/smoke-release.mjs`, `docs/release-checklist.md`.
+
+**Task list Sprint 7:**
+1. **Preset data governance**
+   - Mở rộng `src/presets.js` thành data model có `id`, `rate`, `label`, `note`.
+   - Không thêm `disclaimerTag` field.
+   - Thêm `export const CUSTOM_NOTE = 'Đang dùng lãi suất tùy chỉnh của MSO.'`.
+   - Giữ label trung tính: `Tham khảo 15%`, `Tham khảo 19%`, `Tham khảo 21%`.
+   - Không thêm tên sản phẩm/gói/chính sách VPBank khi chưa có nguồn nghiệp vụ xác nhận.
+2. **Advisor note trên `index.html`**
+   - Thêm `<span id="preset-note">` riêng vào HTML, không replace static `fld-hint` disclaimer từ Sprint 6.
+   - Khi chọn preset, hiển thị note cố định: "Dùng để minh hoạ kịch bản trả nợ. MSO xác nhận lãi suất thực tế trước khi gặp khách."
+   - Khi Custom/MSO nhập tay, note chuyển về: "Đang dùng lãi suất tùy chỉnh của MSO."
+   - Static warning disclaimer từ Sprint 6 phải giữ nguyên ở mọi trạng thái: "Lãi suất trên là ví dụ tham khảo. MSO nhập lãi suất thực tế theo sản phẩm."
+   - Note không xuất hiện trên Share Card trong Sprint 7.
+3. **Copy Summary tightening**
+   - Copy Summary tiếp tục ghi `(Ví dụ tham khảo)` hoặc `(MSO nhập tay)`.
+   - Không thêm advisor note vào Copy Summary trong Sprint 7; format Copy Summary phải giữ nguyên như Sprint 6.
+4. **Test coverage**
+   - `tests/presets.test.js` kiểm tra label trung tính, không chứa từ nhạy cảm: `ưu đãi`, `chuẩn`, `gói`, `chính sách`, `cam kết`, `VPBank`.
+   - Test mỗi preset có `note` và `note.length <= 120`.
+   - Test `CUSTOM_NOTE` tồn tại và `CUSTOM_NOTE.length <= 80`.
+   - Tổng số test trong `tests/presets.test.js` sau Sprint 7 phải >= 6 cases.
+   - Smoke test kiểm `#preset-note` đổi đúng khi chọn preset, sửa tay, và load history.
+5. **Docs + checklist**
+   - Cập nhật `docs/release-checklist.md` với QA cho advisor note.
+   - Cập nhật `handoff.md` giới hạn hiện tại: preset/note chỉ là nội dung hỗ trợ tư vấn, không thay thế chính sách lãi suất thực tế.
+
+**File structure dự kiến:**
+```text
+src/
+└── presets.js                 # thêm note + CUSTOM_NOTE + guard wording
+
+tests/
+└── presets.test.js            # test neutral labels + required note fields + CUSTOM_NOTE
+
+index.html                    # #preset-note riêng dưới preset selector, giữ static disclaimer
+scripts/
+└── smoke-release.mjs          # smoke chọn preset, sửa tay, verify note
+docs/
+└── release-checklist.md       # manual QA advisor note
+handoff.md                    # roadmap + risks + version policy
+```
+
+**Risks:**
+- Advisor note dễ trở thành nội dung tư vấn chính thức nếu wording quá mạnh; cần Claude review câu chữ trước khi Gemini code.
+- Nếu note quá dài, mobile 390px có thể đẩy input lãi suất xuống sâu; cần kiểm layout mobile.
+- Không được import `src/presets.js` trực tiếp trong HTML qua `file://`; nếu cần dùng data trong HTML thì inline tương đương và giữ test module làm nguồn kiểm soát logic.
+- Không được động vào `compare.html` hoặc offline share nếu Sprint 7 chỉ tập trung TC-only.
+- Nếu Gemini replace static `fld-hint` disclaimer thay vì thêm `#preset-note` riêng, sẽ làm mất guard pháp lý từ Sprint 6.
+
+**QA checklist Sprint 7:**
+- `npm test` pass, `tests/presets.test.js` có >= 6 cases.
+- `npm run smoke` pass cả 3 file.
+- Manual mobile 390px: preset selector, static warning disclaimer, `#preset-note`, và input lãi suất không chồng/khó đọc.
+- Manual: chọn từng preset, `#preset-note` hiển thị preset note cố định.
+- Manual: sửa tay `lTC`, selector về Custom và `#preset-note` chuyển về custom note.
+- Manual: load history, selector/note về Custom/MSO nhập tay.
+- Manual: static warning disclaimer từ Sprint 6 vẫn visible ở mọi trạng thái.
+- Regression: Copy Summary vẫn có wording `(Ví dụ tham khảo)` hoặc `(MSO nhập tay)`.
+- Regression: Copy Summary format không thay đổi so với Sprint 6.
+- Regression: `compare.html` và `VPBank_TinChap_TheChap_Calculator.html` không bị thay đổi và vẫn pass smoke.
+
+**Out of scope Sprint 7:**
+- Thêm sản phẩm vay mới.
+- Thêm preset cho TH rates.
+- Chạm `compare.html` hoặc `VPBank_TinChap_TheChap_Calculator.html`.
+- Lấy lãi suất từ server/API.
+- Ghi advisor note lên Share Card.
+- Ghi advisor note vào Copy Summary.
+- Thay đổi static warning `fld-hint` disclaimer từ Sprint 6.
+- Thêm `disclaimerTag` field.
+- Thay đổi công thức tài chính.
+
+### 🔵 v2.0+ — Mở rộng nghiệp vụ sau Sprint 7
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)
 - Đa ngôn ngữ (VN/EN) cho khách nước ngoài
 - Đồng bộ ngược lên hệ thống nội bộ VPBank nếu cần

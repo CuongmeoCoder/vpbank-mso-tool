@@ -304,6 +304,7 @@ async function runPageSmoke(cdp, file) {
           rate: rate.value,
           selectValue: preset.value,
           activePreset,
+          note: document.querySelector('#preset-note')?.textContent || '',
           summary: document.querySelector('#s-tc-ttl')?.textContent || '',
         };
 
@@ -313,6 +314,7 @@ async function runPageSmoke(cdp, file) {
           rate: rate.value,
           selectValue: preset.value,
           activePreset,
+          note: document.querySelector('#preset-note')?.textContent || '',
           summary: document.querySelector('#s-tc-ttl')?.textContent || '',
         };
 
@@ -325,6 +327,7 @@ async function runPageSmoke(cdp, file) {
           rate: rate.value,
           selectValue: preset.value,
           activePreset,
+          note: document.querySelector('#preset-note')?.textContent || '',
         };
 
         return { disclaimerVisible, afterPreset, afterManual, afterLoad };
@@ -335,11 +338,23 @@ async function runPageSmoke(cdp, file) {
     assert(presetState.afterPreset.rate === '15', `${file}: preset did not update TC rate.`);
     assert(presetState.afterPreset.selectValue === '15', `${file}: preset select did not keep selected value.`);
     assert(presetState.afterPreset.activePreset === '15', `${file}: activePreset was not set after selecting preset.`);
+    assert(
+      presetState.afterPreset.note.includes('Dùng để minh hoạ kịch bản trả nợ'),
+      `${file}: preset note did not show preset advisor wording.`,
+    );
     assert(presetState.afterManual.rate === '18', `${file}: manual TC rate edit did not apply.`);
     assert(presetState.afterManual.selectValue === '', `${file}: manual TC rate edit did not clear preset select.`);
     assert(presetState.afterManual.activePreset === null, `${file}: manual TC rate edit did not clear activePreset.`);
+    assert(
+      presetState.afterManual.note.includes('Đang dùng lãi suất tùy chỉnh của MSO'),
+      `${file}: manual TC rate edit did not show custom advisor wording.`,
+    );
     assert(presetState.afterLoad.selectValue === '', `${file}: history load did not clear preset select.`);
     assert(presetState.afterLoad.activePreset === null, `${file}: history load did not clear activePreset.`);
+    assert(
+      presetState.afterLoad.note.includes('Đang dùng lãi suất tùy chỉnh của MSO'),
+      `${file}: history load did not show custom advisor wording.`,
+    );
   }
   if (file === 'compare.html') {
     assert(pageState.hasHomeLink, `${file}: missing relative link to index.html.`);

@@ -1235,7 +1235,7 @@
             <span class="fld-hint">Dùng để xem tỷ lệ trả nợ / thu nhập</span>
           </div>
 
-          <!-- v1.8 Rate Presets -->
+          <!-- v1.9 Rate Presets -->
           <div class="fld" style="grid-column: 1 / -1;">
             <label>Kịch Bản Tư Vấn Tín Chấp</label>
             <div class="fld-inner">
@@ -1246,6 +1246,7 @@
                 <option value="21">Tham khảo 21%</option>
               </select>
             </div>
+            <span id="preset-note" style="display:block; margin-top:6px; font-size:12px; color:var(--blue); font-style:italic; font-weight:600;">Đang dùng lãi suất tùy chỉnh của MSO.</span>
             <span class="fld-hint" style="color:var(--orange); display:block; margin-top:4px;">⚠️ Lãi suất trên là ví dụ tham khảo. MSO nhập lãi suất thực tế theo sản phẩm.</span>
           </div>
 
@@ -1483,7 +1484,7 @@
       </div>
     </div>
 
-    <div class="foot">🏦 VPBank MSO Tool v1.8 · Dữ liệu mang tính tham khảo · Lãi suất thực tế theo từng sản phẩm
+    <div class="foot">🏦 VPBank MSO Tool v1.9 · Dữ liệu mang tính tham khảo · Lãi suất thực tế theo từng sản phẩm
       cụ
       thể
     </div>
@@ -1525,12 +1526,18 @@
     function applyPreset() {
       const sel = document.getElementById('ratePreset');
       activePreset = sel.value || null;
-      if (activePreset) document.getElementById('lTC').value = sel.value;
+      if (activePreset) {
+        document.getElementById('lTC').value = sel.value;
+        document.getElementById('preset-note').textContent = 'Dùng để minh hoạ kịch bản trả nợ. MSO xác nhận lãi suất thực tế trước khi gặp khách.';
+      } else {
+        document.getElementById('preset-note').textContent = 'Đang dùng lãi suất tùy chỉnh của MSO.';
+      }
       calc();
     }
     function onManualRateChange() {
       activePreset = null;
       document.getElementById('ratePreset').value = '';
+      document.getElementById('preset-note').textContent = 'Đang dùng lãi suất tùy chỉnh của MSO.';
       calc();
     }
 
@@ -1841,7 +1848,8 @@
     function copySummary() {
       const stv = document.getElementById('stv').value;
       const lTC = document.getElementById('lTC').value;
-      const presetStr = activePreset ? '(Ví dụ tham khảo)' : '(MSO nhập tay)';
+      const presetVal = document.getElementById('ratePreset').value;
+      const presetStr = presetVal ? '(Ví dụ tham khảo)' : '(MSO nhập tay)';
       const kh = (document.getElementById('khname').value || '').trim();
       const mso = (document.getElementById('msoname').value || '').trim();
       const tcM = document.getElementById('s-tc-m').textContent;
@@ -2155,6 +2163,7 @@ ${kh ? '👤 Khách hàng: ' + kh + '\n' : ''}${mso ? '🤝 MSO: ' + mso + '\n' 
       ['lTC', 'khname', 'msoname', 'prepayM'].forEach(id => { document.getElementById(id).value = item[id] !== undefined && item[id] !== null ? item[id] : ''; });
       activePreset = null;
       document.getElementById('ratePreset').value = '';
+      document.getElementById('preset-note').textContent = 'Đang dùng lãi suất tùy chỉnh của MSO.';
       document.getElementById('prepayRate').value = item.prepayRate;
 
       setKH(item.kh);
