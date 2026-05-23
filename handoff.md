@@ -300,7 +300,54 @@ Với **P = 1 tỷ, TC = 19%, TH Y1 = 7.5%, TH Y2 = 11.5%, TH Y3+ = 12.5%, kỳ 
 - `src/`, `tests/`, `package.json` có thể nằm trong repo public; HTML deploy không import trực tiếp các module này.
 - `VPBank_TinChap_TheChap_Calculator.html` phải đồng bộ nội dung với `compare.html` nếu còn dùng để gửi offline.
 
-### 🔵 v2.0+ — Mở rộng nghiệp vụ
+### 🔵 Sprint 5 / v2.0 — Release Discipline + QA Automation
+
+**Goal:** Giữ v1.7 ổn định khi bắt đầu v2.0 bằng cách chuẩn hoá quy trình release, thêm smoke test tự động cho 2 trang live/offline, và tạo checklist giao việc rõ giữa Codex → Claude → Gemini.
+
+**Nguyên tắc giao việc sau mỗi vòng:**
+- Mỗi lần Codex / Claude / Gemini chạy xong phải kết thúc bằng block copyable: `GIAO VIỆC TIẾP THEO`.
+- Block phải ghi rõ: giao cho ai, vai trò, lý do giao, task cụ thể, output mong đợi, điều kiện pass.
+- Thứ tự mặc định: Codex plan/review → Claude phân tích rủi ro → Gemini implement/QA → Codex review và lập vòng tiếp theo.
+- Không giao Gemini code thêm khi chưa có plan hoặc review risk nếu task ảnh hưởng logic tài chính, privacy, deploy, hoặc offline share.
+
+**Task list Sprint 5:**
+1. **QA smoke script cho release**
+   - Tạo script kiểm tra `index.html`, `compare.html`, và `VPBank_TinChap_TheChap_Calculator.html`.
+   - Verify không lỗi JS nghiêm trọng, chart render, summary đổi khi nhập số, history save/clear hoạt động.
+   - Verify link nội bộ `index.html` ↔ `compare.html` dùng relative path.
+   - Chọn Chrome/Edge local qua Chrome DevTools Protocol để tránh thêm dependency nặng.
+2. **Deploy verification checklist**
+   - Chuẩn hoá checklist sau push GitHub Pages: root URL, `compare.html`, cache-busting query, version footer, privacy text, fee insurance formula.
+   - Ghi rõ cách xử lý nếu GitHub Pages trả bản cache cũ.
+3. **Release note template**
+   - Thêm template ngắn cho mỗi version: changed, tested, known limits, rollback file.
+   - Giữ đủ thông tin để MSO biết bản nào dùng thực tế.
+4. **Không thêm sản phẩm vay mới trong Sprint 5**
+   - Vay mua xe / vay tiêu dùng / đa ngôn ngữ để sau khi release workflow ổn định.
+
+**File structure dự kiến:**
+```text
+scripts/
+└── smoke-release.mjs          # chạy Chrome/Edge local qua Chrome DevTools Protocol
+
+docs/
+└── release-checklist.md       # checklist deploy + release note template
+
+handoff.md                    # cập nhật roadmap + nguyên tắc giao việc
+```
+
+**Risks:**
+- Chrome/CDP tự viết nhẹ hơn Playwright nhưng code test dễ brittle hơn; giữ scope smoke test ở mức luồng release cốt lõi.
+- GitHub Pages có cache delay sau push; checklist phải phân biệt lỗi deploy thật với CDN chưa cập nhật.
+- Không được để smoke script phụ thuộc server local nếu mục tiêu là verify `file://` offline.
+
+**Out of scope Sprint 5:**
+- Thêm sản phẩm vay mới.
+- Đồng bộ dữ liệu lên server hoặc hệ thống nội bộ.
+- Đa ngôn ngữ.
+- Refactor lớn HTML thành framework/build tool.
+
+### 🔵 v2.0+ — Mở rộng nghiệp vụ sau Sprint 5
 - Tích hợp các sản phẩm vay khác của VPBank (vay mua xe, vay tiêu dùng…)
 - Đa ngôn ngữ (VN/EN) cho khách nước ngoài
 - Đồng bộ ngược lên hệ thống nội bộ VPBank nếu cần
